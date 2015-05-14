@@ -47,7 +47,13 @@ router.route('/posts')
     })
 
     .get(function(req, res) {
-        Post.find({}).sort({date: -1}).exec(function(err, posts) {
+
+        var sort = {score: -1};
+        if (req.body.sort && req.body.sort === 'new') {
+            sort = {date: -1};
+        }
+
+        Post.find({}).sort(sort).exec(function(err, posts) {
             if (err) res.send(err);
             var postsRes = [];
             for (var i = 0; i < posts.length; i++) {
