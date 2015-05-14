@@ -4,9 +4,10 @@ var config = require('./config');
 var express = require('express');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
+var Helpers = require('./helpers');
 var Post = require('./models/post');
 
-console.log('Starting up Indiana API')
+console.log('Starting up Indiana API');
 
 var app = express();
 app.use(bodyParser.urlencoded({ extended:true }));
@@ -48,7 +49,17 @@ router.route('/posts')
     .get(function(req, res) {
         Post.find({}).sort({date: -1}).exec(function(err, posts) {
             if (err) res.send(err);
-            res.json(posts);
+            var postsRes = [];
+            for (var i = 0; i < posts.length; i++) {
+                postsRes.push({
+                    id: posts[i]._id,
+                    message: posts[i].message,
+                    score: posts[i].score,
+                    age: Helpers.getAge(posts[i].date),
+                    distance: Helpers.getDistance(1, 2)
+                });
+            }
+            res.json(postsRes);
         });
     });
 
