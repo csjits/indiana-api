@@ -36,9 +36,11 @@ router.route('/posts')
     .post(function(req, res) {
         var post = new Post();
         post.message = req.body.message;
-        post.loc = { lat: req.body.lat, long: req.body.long};
-        post.score = req.body.score || 0;
+        post.loc = [req.body.long, req.body.lat];
         post.date = new Date().toISOString();
+        post.ups = 0;
+        post.downs = 0;
+        post.rank = Helpers.hot(post.ups, post.downs, post.date);
 
         post.save(function(err) {
             if (err) res.send(err);
@@ -48,7 +50,7 @@ router.route('/posts')
 
     .get(function(req, res) {
 
-        var sort = {score: -1};
+        var sort = {rank: -1};
         if (req.body.sort && req.body.sort === 'new') {
             sort = {date: -1};
         }
@@ -61,8 +63,10 @@ router.route('/posts')
                     id: posts[i]._id,
                     message: posts[i].message,
                     score: posts[i].score,
+                    ups: posts[i].ups,
+                    rank: posts[i].rank,
                     age: Helpers.getAge(posts[i].date),
-                    distance: Helpers.getDistance(1, 2)
+                    distance: Helpers.getDistance(posts[i].loc[0], posts[i].loc[1])
                 });
             }
             res.json(postsRes);
@@ -83,7 +87,8 @@ router.route('/posts/:post_id/up')
     .post(function(req, res) {
         Post.findById(req.params.post_id, function(err, post) {
             if (err) res.send(err);
-            post.score = post.score + 1;
+            post.ups = post.ups + 1;
+            post.rank = Helpers.hot(post.ups, post.downs, post.date);
             post.save(function(err) {
                 if (err) res.send(err);
                 res.json({ message: 'OK' });
@@ -96,7 +101,8 @@ router.route('/posts/:post_id/down')
     .post(function(req, res) {
         Post.findById(req.params.post_id, function(err, post) {
             if (err) res.send(err);
-            post.score = post.score - 1;
+            post.downs = post.downs + 1;
+            post.rank = Helpers.hot(post.ups, post.downs, post.date);
             post.save(function(err) {
                 if (err) res.send(err);
                 res.json({ message: 'OK' });

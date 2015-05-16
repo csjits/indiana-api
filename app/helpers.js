@@ -9,4 +9,13 @@ exports.getAge = function(date) {
 
 exports.getDistance = function(locFirst, locSecond) {
     return 5;
-}
+};
+
+exports.hot = function(ups, downs, date) {
+    var score = ups - downs;
+    var order = Math.log(Math.max(Math.abs(score), 1)) / Math.LN10;
+    var sign = score > 0 ? 1: score < 0 ? -1 : 0;
+    var seconds = (date - new Date(2015, 1, 1)) / 1000;
+    var product = sign * order + seconds / 45000;
+    return Math.round(product * 10e6) / 10e6;
+};
