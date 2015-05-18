@@ -10,10 +10,6 @@ var PostSchema = new Schema({
     loc: {type: [Number], index: '2dsphere'}
 });
 
-PostSchema.virtual('score').get(function() {
-    return this.ups - this.downs;
-});
-
 PostSchema.path('message').validate(function(v) {
     return v != null;
 });

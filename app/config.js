@@ -1,10 +1,10 @@
-var configProduction = require('./config-production');
+var productionMongodbPath = require('./config-production');
 
 var config= {};
 
 config.compName = process.env.COMPUTERNAME || process.env.COMPUTER_NAME || '';
 
-config.mongodbPath = configProduction.mongodbPath;
+config.mongodbPath = productionMongodbPath;
 if (config.compName === 'DENKBOX' || config.compName === 'ULTRABRETT') {
     config.mongodbPath = 'mongodb://localhost/indiana';
 }

@@ -81,8 +81,7 @@ router.route('/posts')
                     postsRes.push({
                         id: posts[i]._id,
                         message: posts[i].message,
-                        score: posts[i].score,
-                        ups: posts[i].ups,
+                        score: posts[i].ups - posts[i].downs,
                         rank: posts[i].rank,
                         age: Helpers.getAge(posts[i].date),
                         distance: Math.ceil(posts[i].dis)
