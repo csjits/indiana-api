@@ -7,7 +7,7 @@ var PostSchema = new Schema({
     downs: Number,
     date: {type: Date, default: Date.now},
     rank: {type: Number, default: 0},
-    loc: [Number, Number]
+    loc: {type: [Number], index: '2dsphere'}
 });
 
 PostSchema.virtual('score').get(function() {

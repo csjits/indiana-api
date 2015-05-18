@@ -22,8 +22,8 @@ var router = express.Router();
 
 // Middleware
 router.use(function(req, res, next) {
-  console.log('Request:', req.originalUrl);
-  next();
+    console.log('Request:', req.method + ' ' +req.originalUrl);
+    next();
 });
 
 router.route('/')
@@ -50,27 +50,47 @@ router.route('/posts')
 
     .get(function(req, res) {
 
-        var sort = {rank: -1};
+        var sort = 'rank';
         if (req.body.sort && req.body.sort === 'new') {
-            sort = {date: -1};
+            sort = 'date';
         }
 
-        Post.find({}).sort(sort).exec(function(err, posts) {
-            if (err) res.send(err);
-            var postsRes = [];
-            for (var i = 0; i < posts.length; i++) {
-                postsRes.push({
-                    id: posts[i]._id,
-                    message: posts[i].message,
-                    score: posts[i].score,
-                    ups: posts[i].ups,
-                    rank: posts[i].rank,
-                    age: Helpers.getAge(posts[i].date),
-                    distance: Helpers.getDistance(posts[i].loc[0], posts[i].loc[1])
-                });
+        var coords = [parseFloat(req.query.long), parseFloat(req.query.lat)];
+
+        Post.aggregate(
+            [
+                {
+                    "$geoNear": {
+                        "near": {
+                            "type": "Point",
+                            "coordinates": coords
+                        },
+                        "distanceField": "dis",
+                        "maxDistance": config.maxDistance,
+                        "distanceMultiplier": config.distanceMultiplier,
+                        "spherical": true
+                    }
+                },
+                { "$sort": { sort: -1 } }
+            ],
+            function(err, posts) {
+                if (err) res.send(err);
+                var postsRes = [];
+                console.log(posts);
+                for (var i = 0; i < posts.length; i++) {
+                    postsRes.push({
+                        id: posts[i]._id,
+                        message: posts[i].message,
+                        score: posts[i].score,
+                        ups: posts[i].ups,
+                        rank: posts[i].rank,
+                        age: Helpers.getAge(posts[i].date),
+                        distance: Math.ceil(posts[i].dis)
+                    });
+                }
+                res.json(postsRes);
             }
-            res.json(postsRes);
-        });
+        );
     });
 
 router.route('/posts/:post_id')

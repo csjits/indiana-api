@@ -7,10 +7,6 @@ exports.getAge = function(date) {
     return Math.floor(age / 1e3)  + 's';
 };
 
-exports.getDistance = function(locFirst, locSecond) {
-    return 5;
-};
-
 exports.hot = function(ups, downs, date) {
     var score = ups - downs;
     var order = Math.log(Math.max(Math.abs(score), 1)) / Math.LN10;
