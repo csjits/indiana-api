@@ -50,9 +50,9 @@ router.route('/posts')
 
     .get(function(req, res) {
 
-        var sort = 'rank';
+        var sort = { "rank": -1 }
         if (req.body.sort && req.body.sort === 'new') {
-            sort = 'date';
+            sort = { "date": -1 }
         }
 
         var coords = [parseFloat(req.query.long), parseFloat(req.query.lat)];
@@ -71,7 +71,7 @@ router.route('/posts')
                         "spherical": true
                     }
                 },
-                { "$sort": { sort: -1 } }
+                { "$sort": sort }
             ],
             function(err, posts) {
                 if (err) res.send(err);
