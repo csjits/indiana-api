@@ -106,7 +106,7 @@ router.route('/posts/:post_id/up')
         Post.findById(req.params.post_id, function(err, post) {
             if (err) res.send(err);
             post.ups = post.ups + 1;
-            post.rank = Helpers.hot(post.ups, post.downs, post.date);
+            post.rank = Helpers.hot(post.ups, post.downs, post.date, config.voteMultiplier);
             post.save(function(err) {
                 if (err) res.send(err);
                 res.json({ message: 'OK' });
@@ -120,7 +120,7 @@ router.route('/posts/:post_id/down')
         Post.findById(req.params.post_id, function(err, post) {
             if (err) res.send(err);
             post.downs = post.downs + 1;
-            post.rank = Helpers.hot(post.ups, post.downs, post.date);
+            post.rank = Helpers.hot(post.ups, post.downs, post.date, config.voteMultiplier);
             post.save(function(err) {
                 if (err) res.send(err);
                 res.json({ message: 'OK' });

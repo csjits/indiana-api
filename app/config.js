@@ -10,7 +10,7 @@ if (config.compName === 'DENKBOX' || config.compName === 'ULTRABRETT') {
 }
 
 config.port = 61017;
-
+config.voteMultiplier = 10;
 config.maxDistance = 20000;
 config.distanceMultiplier = 1/6371;
 
