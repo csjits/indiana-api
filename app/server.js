@@ -51,7 +51,7 @@ router.route('/posts')
     .get(function(req, res) {
 
         var sort = { "rank": -1 }
-        if (req.body.sort && req.body.sort === 'new') {
+        if (req.query.sort && req.query.sort === 'new') {
             sort = { "date": -1 }
         }
 
@@ -76,7 +76,6 @@ router.route('/posts')
             function(err, posts) {
                 if (err) res.send(err);
                 var postsRes = [];
-                console.log(posts);
                 for (var i = 0; i < posts.length; i++) {
                     postsRes.push({
                         id: posts[i]._id,
