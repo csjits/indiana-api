@@ -35,7 +35,9 @@ router.route('/posts')
 
     .post(function(req, res) {
         var post = new Post();
+        // validate
         post.message = req.body.message;
+        //validate
         post.loc = [req.body.long, req.body.lat];
         post.date = new Date().toISOString();
         post.ups = 0;
@@ -55,6 +57,7 @@ router.route('/posts')
             sort = { "date": -1 }
         }
 
+        // validate
         var coords = [parseFloat(req.query.long), parseFloat(req.query.lat)];
 
         Post.aggregate(
@@ -83,7 +86,7 @@ router.route('/posts')
                         score: posts[i].ups - posts[i].downs,
                         rank: posts[i].rank,
                         age: Helpers.getAge(posts[i].date),
-                        distance: Math.ceil(posts[i].dis)
+                        distance: Helpers.getDistance(posts[i].dis, config.distancePrecision)
                     });
                 }
                 res.json(postsRes);
@@ -94,6 +97,7 @@ router.route('/posts')
 router.route('/posts/:post_id')
 
     .get(function(req, res) {
+        // validate
         Post.findById(req.params.post_id, function(err, post) {
             if (err) res.send(err);
             res.json(post);
