@@ -7,7 +7,10 @@ var PostSchema = new Schema({
     downs: Number,
     date: {type: Date, default: Date.now},
     rank: {type: Number, default: 0},
-    loc: {type: [Number], index: '2dsphere'}
+    loc: {type: [Number], index: '2dsphere'},
+    user: String,
+    upvoters: [String],
+    downvoters: [String]
 });
 
 PostSchema.path('message').validate(function(v) {
