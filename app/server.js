@@ -40,6 +40,7 @@ router.route('/posts')
         post.message = req.body.message;
         // validate
         post.loc = [req.body.long, req.body.lat];
+        post.user = req.body.user;
         post.date = new Date().toISOString();
         post.ups = 0;
         post.downs = 0;
