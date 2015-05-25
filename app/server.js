@@ -145,23 +145,14 @@ router.route('/posts/:post_id/:action')
 router.route('/karma')
 
     .get(function(req, res) {
-        Post.aggregate(
-            [
-                {
-                    $group: {
-                        _id: "$_id",
-                        score: { $sum: { $subtract: ["$ups", "$downs"] } }
-                    }
-                }
-            ], function(err, posts) {
-                if (err) res.send(err);
-                var karma = 0;
-                for (var i = 0; i < posts.length; i++) {
-                    karma = karma + posts[i].score;
-                }
-                res.json({ karma: karma });
+        Post.where('user').equals(req.query.user).select('ups downs').exec(function(err, posts) {
+            if (err) res.send(err);
+            var karma = 0;
+            for (var i = 0; i < posts.length; i++) {
+                karma = karma + posts[i].ups - posts[i].downs;
             }
-        );
+            res.json({ karma: karma });
+        });
     });
 
 // REGISTER ROUTES
