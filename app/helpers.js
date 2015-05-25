@@ -1,3 +1,5 @@
+var md5 = require('MD5');
+
 exports.getAge = function(date) {
     var now = new Date();
     var age = new Date() - date;
@@ -19,4 +21,13 @@ exports.hot = function(ups, downs, date, multi) {
     var seconds = (date - new Date(2015, 1, 1)) / 1000;
     var product = (multi || 1) * sign * order + seconds / 45000;
     return Math.round(product * 10e6) / 10e6;
+};
+
+exports.token = function(user, salt) {
+    return md5(user + salt);
+};
+
+exports.tokenLifetime = function() {
+    var now = new Date();
+    return 86400 - now.getSeconds() - 60*now.getMinutes() - 1440*now.getHours();
 };

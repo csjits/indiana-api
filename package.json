@@ -4,6 +4,8 @@
     "dependencies": {
         "express": "~4.0.0",
         "mongoose": "~4.0.3",
-        "body-parser": "~1.0.1"
+        "body-parser": "~1.0.1",
+        "MD5": "1.2.2",
+        "express-rate-limit": "1.0.2"
     }
 }

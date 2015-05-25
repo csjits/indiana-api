@@ -1,12 +1,14 @@
-var productionMongodbPath = require('./config-production');
+var configProduction = require('./config-production');
 
 var config= {};
 
 config.compName = process.env.COMPUTERNAME || process.env.COMPUTER_NAME || '';
 
-config.mongodbPath = productionMongodbPath;
+config.mongodbPath = configProduction.mongodbPath;
+config.salts = configProduction.salts;
 if (config.compName === 'DENKBOX' || config.compName === 'ULTRABRETT') {
     config.mongodbPath = 'mongodb://localhost/indiana';
+    config.salt = 'ABC123';
 }
 
 // HTTP port
@@ -23,5 +25,13 @@ config.distanceMultiplier = 1/1000;
 
 // Precision of distance (decimals)
 config.distancePrecision = 1;
+
+// Block IPs on frequent token requests
+config.limiter = {
+    windowMs: 1440e3,
+    delayMs: 0,
+    max: 5,
+    global: false
+};
 
 module.exports = config;

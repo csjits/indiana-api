@@ -4,6 +4,7 @@ var config = require('./config');
 var express = require('express');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
+var rateLimit = require('express-rate-limit');
 var Helpers = require('./helpers');
 var Post = require('./models/post');
 
@@ -144,6 +145,12 @@ router.route('/posts/:post_id/:action')
 // REGISTER ROUTES
 // #############################################################################
 app.use('/', router);
+
+// Set rate limiter on token requests
+app.get('/token', rateLimit(config.limiter), function(req, res) {
+    var token = Helpers.token(req.query.user, config.salt);
+    res.json({ token: token });
+});
 
 // START SERVER
 // #############################################################################
