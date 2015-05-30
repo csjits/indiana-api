@@ -31,7 +31,8 @@ config.limiter = {
     windowMs: 1440e3,
     delayMs: 0,
     max: 5,
-    global: false
+    global: false,
+    message: '{"message":"Too many requests, please try again later."}'
 };
 
 // Max query results

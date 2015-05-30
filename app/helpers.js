@@ -27,7 +27,8 @@ exports.token = function(user, salt) {
     return md5(user + salt);
 };
 
-exports.tokenLifetime = function() {
-    var now = new Date();
-    return 86400 - now.getSeconds() - 60*now.getMinutes() - 1440*now.getHours();
-};
+exports.isValidLocation = function(long, lat) {
+    if (!long || !lat) return false;
+    if (isNaN(parseFloat(long)) || isNaN(parseFloat(lat))) return false;
+    return true;
+}

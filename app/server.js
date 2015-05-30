@@ -24,22 +24,47 @@ var router = express.Router();
 // Middleware
 router.use(function(req, res, next) {
     console.log('Request:', req.method + ' ' +req.originalUrl);
-    next();
+
+    if (req.method === 'POST') {
+        if (!req.body.user
+            || !req.body.token
+            || req.body.token !== Helpers.token(req.body.user, config.salt)) {
+                res.json({ message: 'Error: Invalid user or token' });
+                return;
+        }
+        next();
+    }
+
+    if (req.method === 'GET') {
+        if (!req.query.user) {
+            res.json({ message: 'Error: Invalid user' });
+            return;
+        }
+        next();
+    }
 });
 
 router.route('/')
     .get(function(req, res) {
-        res.json({ message: 'Stay a while and listen.' });
+        res.json({ message: 'Stay a while and listen' });
     });
 
 router.route('/posts')
 
     .post(function(req, res) {
+        if (!Helpers.isValidLocation(req.body.long, req.body.lat)) {
+            res.json({ message: 'Error: Invalid location' });
+            return;
+        }
+
+        if (!req.body.message.trim()) {
+            res.json({ message: 'Error: Invalid message' });
+            return;
+        }
+
         var post = new Post();
-        // validate
-        post.message = req.body.message;
-        // validate
-        post.loc = [req.body.long, req.body.lat];
+        post.message = req.body.message.trim();
+        post.loc = [parseFloat(req.body.long), parseFloat(req.body.lat)];
         post.user = req.body.user;
         post.date = new Date().toISOString();
         post.ups = 0;
@@ -56,27 +81,17 @@ router.route('/posts')
 
     .get(function(req, res) {
 
-        var sort = { "rank": -1 }
-        if (req.query.sort && (req.query.sort === 'new' || req.query.sort === 'my')) {
-            sort = { "date": -1 }
-        }
-
-        // validate
-        var coords = [parseFloat(req.query.long), parseFloat(req.query.lat)];
         var user = req.query.user;
-
+        var type = req.query.sort || 'hot';
+        var sort = (type === 'new' || type === 'my') ? { "date": -1 } : { "rank": -1 };
         var queryArray;
-        if (req.query.sort && req.query.sort === 'my') {
-            queryArray = [
-                {
-                    "$match": {
-                        "user": user
-                    }
-                },
-                { "$sort": sort },
-                { "$limit": config.maxResults }
-            ];
-        } else {
+
+        if (type === 'hot' || type == 'new') {
+            if (!Helpers.isValidLocation(req.query.long, req.query.lat)) {
+                res.json({ message: 'Error: Invalid location' });
+                return;
+            }
+            var coords = [parseFloat(req.query.long), parseFloat(req.query.lat)];
             queryArray = [
                 {
                     "$geoNear": {
@@ -93,6 +108,19 @@ router.route('/posts')
                 { "$sort": sort },
                 { "$limit": config.maxResults }
             ];
+        } else if (type === 'my') {
+            queryArray = [
+                {
+                    "$match": {
+                        "user": user
+                    }
+                },
+                { "$sort": sort },
+                { "$limit": config.maxResults }
+            ];
+        } else {
+            res.json({ message: 'Error: Sort must be hot, new or my' });
+            return;
         }
 
         Post.aggregate(
@@ -121,16 +149,6 @@ router.route('/posts')
                 res.json(postsRes);
             }
         );
-    });
-
-router.route('/posts/:post_id')
-
-    .get(function(req, res) {
-        // validate
-        Post.findById(req.params.post_id, function(err, post) {
-            if (err) res.send(err);
-            res.json(post);
-        });
     });
 
 router.route('/posts/:post_id/up')
