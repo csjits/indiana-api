@@ -57,7 +57,7 @@ router.route('/posts')
     .get(function(req, res) {
 
         var sort = { "rank": -1 }
-        if (req.query.sort && req.query.sort === 'new') {
+        if (req.query.sort && (req.query.sort === 'new' || req.query.sort === 'my')) {
             sort = { "date": -1 }
         }
 
@@ -65,8 +65,19 @@ router.route('/posts')
         var coords = [parseFloat(req.query.long), parseFloat(req.query.lat)];
         var user = req.query.user;
 
-        Post.aggregate(
-            [
+        var queryArray;
+        if (req.query.sort && req.query.sort === 'my') {
+            queryArray = [
+                {
+                    "$match": {
+                        "user": user
+                    }
+                },
+                { "$sort": sort },
+                { "$limit": config.maxResults }
+            ];
+        } else {
+            queryArray = [
                 {
                     "$geoNear": {
                         "near": {
@@ -79,8 +90,13 @@ router.route('/posts')
                         "spherical": true
                     }
                 },
-                { "$sort": sort }
-            ],
+                { "$sort": sort },
+                { "$limit": config.maxResults }
+            ];
+        }
+
+        Post.aggregate(
+            queryArray,
             function(err, posts) {
                 if (err) res.send(err);
                 var postsRes = [];
@@ -127,11 +143,11 @@ router.route('/posts/:post_id/:action')
                 res.json({ message: 'Error: Already voted' });
                 return;
             }
-            if (req.params.action == 'up') {
+            if (req.params.action === 'up') {
                 post.ups = post.ups + 1;
                 post.upvoters.push(user);
             }
-            if (req.params.action == 'down') {
+            if (req.params.action === 'down') {
                 post.downs = post.downs + 1;
                 post.downvoters.push(user);
             }

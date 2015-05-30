@@ -34,4 +34,7 @@ config.limiter = {
     global: false
 };
 
+// Max query results
+config.maxResults = 100;
+
 module.exports = config;
