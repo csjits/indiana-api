@@ -133,24 +133,42 @@ router.route('/posts/:post_id')
         });
     });
 
-router.route('/posts/:post_id/:action')
+router.route('/posts/:post_id/up')
 
     .post(function(req, res) {
         Post.findById(req.params.post_id, function(err, post) {
             if (err) res.send(err);
             var user = req.body.user;
-            if (post.upvoters && post.upvoters.indexOf(user) > -1 || post.downvoters && post.downvoters.indexOf(user) > -1) {
+            if (post.upvoters && post.upvoters.indexOf(user) > -1) {
                 res.json({ message: 'Error: Already voted' });
                 return;
             }
-            if (req.params.action === 'up') {
-                post.ups = post.ups + 1;
-                post.upvoters.push(user);
+
+            post.ups = post.ups + 1;
+            post.upvoters.push(user);
+
+            post.rank = Helpers.hot(post.ups, post.downs, post.date, config.voteMultiplier);
+            post.save(function(err) {
+                if (err) res.send(err);
+                res.json({ message: 'OK' });
+            });
+        });
+    });
+
+router.route('/posts/:post_id/down')
+
+    .post(function(req, res) {
+        Post.findById(req.params.post_id, function(err, post) {
+            if (err) res.send(err);
+            var user = req.body.user;
+            if (post.downvoters && post.downvoters.indexOf(user) > -1) {
+                res.json({ message: 'Error: Already voted' });
+                return;
             }
-            if (req.params.action === 'down') {
-                post.downs = post.downs + 1;
-                post.downvoters.push(user);
-            }
+
+            post.downs = post.downs + 1;
+            post.downvoters.push(user);
+
             post.rank = Helpers.hot(post.ups, post.downs, post.date, config.voteMultiplier);
             post.save(function(err) {
                 if (err) res.send(err);
