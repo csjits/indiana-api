@@ -16,7 +16,7 @@ exports.getDistance = function(distance, precision) {
 
 exports.hot = function(ups, downs, date, multi) {
     var score = ups - downs;
-    var order = Math.log(Math.max(Math.abs(score), 1)) / Math.LN10;
+    var order = Math.log(Math.abs(score) + 1)) / Math.LN10;
     var sign = score > 0 ? 1: score < 0 ? -1 : 0;
     var seconds = (date - new Date(2015, 1, 1)) / 1000;
     var product = (multi || 1) * sign * order + seconds / 45000;
