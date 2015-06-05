@@ -25,23 +25,11 @@ var router = express.Router();
 router.use(function(req, res, next) {
     console.log('Request:', req.method + ' ' +req.originalUrl);
 
-    if (req.method === 'POST') {
-        if (!req.body.user
-            || !req.body.token
-            || req.body.token !== Helpers.token(req.body.user, config.salt)) {
-                res.json({ message: 'Error: Invalid user or token' });
-                return;
-        }
-        next();
+    if (!req.query.user && !req.body.user) {
+        res.json({ message: 'Error: Invalid user' });
+        return;
     }
-
-    if (req.method === 'GET') {
-        if (!req.query.user) {
-            res.json({ message: 'Error: Invalid user' });
-            return;
-        }
-        next();
-    }
+    next();
 });
 
 router.route('/')
@@ -214,8 +202,7 @@ app.use('/', router);
 
 // Set rate limiter on token requests
 app.get('/token', rateLimit(config.limiter), function(req, res) {
-    var token = Helpers.token(req.query.user, config.salt);
-    res.json({ token: token });
+    res.json({ token: 'foo' });
 });
 
 // START SERVER

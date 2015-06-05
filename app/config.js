@@ -26,7 +26,7 @@ config.distanceMultiplier = 1/1000;
 // Precision of distance (decimals)
 config.distancePrecision = 1;
 
-// Block IPs on frequent token requests
+// Block IPs on frequent requests
 config.limiter = {
     windowMs: 1440e3,
     delayMs: 0,
