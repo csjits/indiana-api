@@ -7,12 +7,15 @@ var mongoose = require('mongoose');
 var rateLimit = require('express-rate-limit');
 var Helpers = require('./helpers');
 var Post = require('./models/post');
+var PostController = require('./controllers/post');
 
 console.log('Starting up Indiana API');
 
 var app = express();
 app.use(bodyParser.urlencoded({ extended:true }));
 app.use(bodyParser.json());
+
+var pc = new PostController();
 
 mongoose.connect(config.mongodbPath);
 console.log('MongoDB state', mongoose.connection.readyState);
@@ -50,16 +53,7 @@ router.route('/posts')
             return;
         }
 
-        var post = new Post();
-        post.message = req.body.message.trim();
-        post.loc = [parseFloat(req.body.long), parseFloat(req.body.lat)];
-        post.user = req.body.user;
-        post.date = new Date().toISOString();
-        post.ups = 0;
-        post.downs = 0;
-        post.upvoters = [],
-        post.downvoters = [],
-        post.rank = Helpers.hot(post.ups, post.downs, post.date);
+        var post = pc.create(req, false);
 
         post.save(function(err) {
             if (err) res.send(err);
@@ -82,6 +76,12 @@ router.route('/posts')
             var coords = [parseFloat(req.query.long), parseFloat(req.query.lat)];
             queryArray = [
                 {
+                    "$match": {
+                        "$or": [
+                            { "isReply": null },
+                            { "isReply": false }
+                        ]
+                    },
                     "$geoNear": {
                         "near": {
                             "type": "Point",
@@ -93,18 +93,27 @@ router.route('/posts')
                         "spherical": true
                     }
                 },
-                { "$sort": sort },
-                { "$limit": config.maxResults }
+                { "$limit": config.maxResults },
+                { "$sort": sort }
             ];
         } else if (type === 'my') {
             queryArray = [
                 {
                     "$match": {
-                        "user": user
+                        "$and": [
+                            { "user": user },
+                            {
+                                "$or": [
+                                    { "isReply": null },
+                                    { "isReply": false }
+                                ]
+                            }
+                        ]
+
                     }
                 },
-                { "$sort": sort },
-                { "$limit": config.maxResults }
+                { "$limit": config.maxResults },
+                { "$sort": sort }
             ];
         } else {
             res.json({ message: 'Error: Sort must be hot, new or my' });
@@ -115,25 +124,7 @@ router.route('/posts')
             queryArray,
             function(err, posts) {
                 if (err) res.send(err);
-                var postsRes = [];
-                for (var i = 0; i < posts.length; i++) {
-                    var distance = Helpers.getDistance(posts[i].dis, config.distancePrecision);
-                    var voted = 0;
-                    if (posts[i].upvoters && posts[i].upvoters.indexOf(user) > -1) {
-                        voted = 1;
-                    } else if (posts[i].downvoters && posts[i].downvoters.indexOf(user) > -1) {
-                        voted = -1
-                    }
-                    postsRes.push({
-                        id: posts[i]._id,
-                        message: posts[i].message,
-                        score: posts[i].ups - posts[i].downs,
-                        rank: posts[i].rank,
-                        age: Helpers.getAge(posts[i].date),
-                        distance: distance,
-                        voted: voted
-                    });
-                }
+                var postsRes = pc.readAggregate(posts, user);
                 res.json(postsRes);
             }
         );
@@ -152,8 +143,8 @@ router.route('/posts/:post_id/up')
 
             post.ups = post.ups + 1;
             post.upvoters.push(user);
-
             post.rank = Helpers.hot(post.ups, post.downs, post.date, config.voteMultiplier);
+
             post.save(function(err) {
                 if (err) res.send(err);
                 res.json({ message: 'OK' });
@@ -174,12 +165,43 @@ router.route('/posts/:post_id/down')
 
             post.downs = post.downs + 1;
             post.downvoters.push(user);
-
             post.rank = Helpers.hot(post.ups, post.downs, post.date, config.voteMultiplier);
+
             post.save(function(err) {
                 if (err) res.send(err);
                 res.json({ message: 'OK' });
             });
+        });
+    });
+
+router.route('/posts/:post_id/reply')
+
+    .post(function(req, res) {
+        Post.findById(req.params.post_id, function(err, post) {
+            if (err) res.send(err);
+
+            if (!Helpers.isValidLocation(req.body.long, req.body.lat)) {
+                res.json({ message: 'Error: Invalid location' });
+                return;
+            }
+
+            if (!req.body.message.trim()) {
+                res.json({ message: 'Error: Invalid message' });
+                return;
+            }
+
+            var reply = pc.create(req, true);
+
+            reply.save(function(err) {
+                if (err) res.send(err);
+                post.replies.push(reply._id);
+
+                post.save(function(err) {
+                    if (err) res.send(err);
+                    res.json({ message: 'OK' });
+                });
+            });
+
         });
     });
 
@@ -200,7 +222,7 @@ router.route('/karma')
 // #############################################################################
 app.use('/', router);
 
-// Set rate limiter on token requests
+// Set rate limiter on token requests (deprecated)
 app.get('/token', rateLimit(config.limiter), function(req, res) {
     res.json({ token: 'foo' });
 });

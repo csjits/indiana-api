@@ -8,9 +8,11 @@ var PostSchema = new Schema({
     date: {type: Date, default: Date.now},
     rank: {type: Number, default: 0},
     loc: {type: [Number], index: '2dsphere'},
-    user: String,
+    user: { type: String, index: true },
     upvoters: [String],
-    downvoters: [String]
+    downvoters: [String],
+    replies: [Schema.Types.ObjectId],
+    isReply: {type: Boolean, default: false}
 });
 
 PostSchema.path('message').validate(function(v) {
