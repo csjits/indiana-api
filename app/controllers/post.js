@@ -20,30 +20,61 @@ PostController.prototype.create = function(req, isReply) {
     return post;
 }
 
-PostController.prototype.read = function() {
+PostController.prototype.read = function(post, user, readReplies) {
+    console.log(post.dis);
+    var distance = Helpers.getDistance(post.dis, config.distancePrecision);
+    var voted = 0;
+    if (post.upvoters && post.upvoters.indexOf(user) > -1) {
+        voted = 1;
+    } else if (post.downvoters && post.downvoters.indexOf(user) > -1) {
+        voted = -1
+    }
+    var age = Helpers.getAge(post.date);
 
+    var postRes = {
+        id: post._id,
+        message: post.message,
+        score: post.ups - post.downs,
+        rank: post.rank,
+        age: age,
+        distance: distance,
+        voted: voted
+    }
+
+    if (readReplies) {
+        postRes.replies = [];
+        for (var i = 0; i < post.replies.length; i++) {
+            postRes.replies.push(this.readReply(post.replies[i], user));
+        }
+    } else {
+        postRes.replies = (post.replies ? post.replies.length : 0);
+    }
+
+    return postRes;
+}
+
+PostController.prototype.readReply = function(reply, user) {
+    var voted = 0;
+    if (reply.upvoters && reply.upvoters.indexOf(user) > -1) {
+        voted = 1;
+    } else if (reply.downvoters && reply.downvoters.indexOf(user) > -1) {
+        voted = -1
+    }
+    var age = Helpers.getAge(reply.date);
+    var replyRes = {
+        id: reply._id,
+        message: reply.message,
+        score: reply.ups - reply.downs,
+        age: age,
+        voted: voted
+    }
+    return replyRes;
 }
 
 PostController.prototype.readAggregate = function(posts, user) {
     var postsRes = [];
     for (var i = 0; i < posts.length; i++) {
-        var distance = Helpers.getDistance(posts[i].dis, config.distancePrecision);
-        var voted = 0;
-        if (posts[i].upvoters && posts[i].upvoters.indexOf(user) > -1) {
-            voted = 1;
-        } else if (posts[i].downvoters && posts[i].downvoters.indexOf(user) > -1) {
-            voted = -1
-        }
-        postsRes.push({
-            id: posts[i]._id,
-            message: posts[i].message,
-            score: posts[i].ups - posts[i].downs,
-            rank: posts[i].rank,
-            age: Helpers.getAge(posts[i].date),
-            distance: distance,
-            voted: voted,
-            replies: (posts[i].replies ? posts[i].replies.length : 0)
-        });
+        postsRes.push(this.read(posts[i], user, false));
     }
     return postsRes;
 }

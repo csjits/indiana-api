@@ -143,7 +143,9 @@ router.route('/posts/:post_id')
                 return;
             }
 
-            res.json(post);
+            var user = req.query.user;
+
+            res.json(pc.read(post, user, true));
         })
     });
 
