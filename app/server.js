@@ -76,12 +76,6 @@ router.route('/posts')
             var coords = [parseFloat(req.query.long), parseFloat(req.query.lat)];
             queryArray = [
                 {
-                    "$match": {
-                        "$or": [
-                            { "isReply": null },
-                            { "isReply": false }
-                        ]
-                    },
                     "$geoNear": {
                         "near": {
                             "type": "Point",
@@ -91,6 +85,14 @@ router.route('/posts')
                         "maxDistance": config.maxDistance,
                         "distanceMultiplier": config.distanceMultiplier,
                         "spherical": true
+                    }
+                },
+                {
+                    "$match": {
+                        "$or": [
+                            { "isReply": null },
+                            { "isReply": false }
+                        ]
                     }
                 },
                 { "$limit": config.maxResults },
