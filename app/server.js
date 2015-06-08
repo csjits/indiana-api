@@ -130,11 +130,32 @@ router.route('/posts')
         );
     });
 
+router.route('/posts/:post_id')
+
+    .get(function(req, res) {
+        Post.findById(req.params.post_id).populate('replies').exec(function(err, post) {
+            if (err) res.send(err);
+
+            if (!post) {
+                res.json({ message: 'Error: Invalid post' });
+                return;
+            }
+
+            res.json(post);
+        })
+    });
+
 router.route('/posts/:post_id/up')
 
     .post(function(req, res) {
         Post.findById(req.params.post_id, function(err, post) {
             if (err) res.send(err);
+
+            if (!post) {
+                res.json({ message: 'Error: Invalid post' });
+                return;
+            }
+
             var user = req.body.user;
             if (post.upvoters && post.upvoters.indexOf(user) > -1) {
                 res.json({ message: 'Error: Already voted' });
@@ -157,6 +178,12 @@ router.route('/posts/:post_id/down')
     .post(function(req, res) {
         Post.findById(req.params.post_id, function(err, post) {
             if (err) res.send(err);
+
+            if (!post) {
+                res.json({ message: 'Error: Invalid post' });
+                return;
+            }
+
             var user = req.body.user;
             if (post.downvoters && post.downvoters.indexOf(user) > -1) {
                 res.json({ message: 'Error: Already voted' });
@@ -179,6 +206,11 @@ router.route('/posts/:post_id/reply')
     .post(function(req, res) {
         Post.findById(req.params.post_id, function(err, post) {
             if (err) res.send(err);
+
+            if (!post) {
+                res.json({ message: 'Error: Invalid post' });
+                return;
+            }
 
             if (!Helpers.isValidLocation(req.body.long, req.body.lat)) {
                 res.json({ message: 'Error: Invalid location' });

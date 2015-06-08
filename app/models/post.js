@@ -11,7 +11,7 @@ var PostSchema = new Schema({
     user: { type: String, index: true },
     upvoters: [String],
     downvoters: [String],
-    replies: [Schema.Types.ObjectId],
+    replies: {type: [Schema.Types.ObjectId], ref: 'Post'},
     isReply: {type: Boolean, default: false}
 });
 
