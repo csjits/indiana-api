@@ -21,7 +21,6 @@ PostController.prototype.create = function(req, isReply) {
 }
 
 PostController.prototype.read = function(post, user, readReplies) {
-    console.log(post.dis);
     var distance = Helpers.getDistance(post.dis, config.distancePrecision);
     var voted = 0;
     if (post.upvoters && post.upvoters.indexOf(user) > -1) {
