@@ -95,8 +95,9 @@ router.route('/posts')
                         ]
                     }
                 },
-                { "$limit": config.maxResults },
-                { "$sort": sort }
+                { "$sort": sort },
+                { "$limit": config.maxResults }
+
             ];
         } else if (type === 'my') {
             queryArray = [
@@ -114,8 +115,9 @@ router.route('/posts')
 
                     }
                 },
-                { "$limit": config.maxResults },
-                { "$sort": sort }
+                { "$sort": sort },
+                { "$limit": config.maxResults }
+
             ];
         } else {
             res.json({ message: 'Error: Sort must be hot, new or my' });
